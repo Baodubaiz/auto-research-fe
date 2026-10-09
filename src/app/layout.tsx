@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
@@ -20,11 +21,15 @@ export const metadata: Metadata = {
   description: "Automated Academic Researching and Report Generation System",
 };
 
+<<<<<<< HEAD
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+=======
+export default function RootLayout({ children }: { children: ReactNode }) {
+>>>>>>> 7a6189751f7f0b20a360185ba77904fc4cc364e5
   return (
     <html
       lang="en"
