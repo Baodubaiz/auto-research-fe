@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Cài đặt libc6-compat nếu cần cho các native bindings trên Alpine
+RUN apk add --no-cache libc6-compat
+
+# Sao chép package manifests để tận dụng Docker layer cache
+COPY package.json package-lock.json ./
+
+# Cài đặt dependencies
+RUN npm ci
+
+# Biến môi trường chế độ phát triển
+ENV NODE_ENV=development
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+# Kích hoạt polling giúp Next.js bắt file change trên mọi hệ điều hành (WSL2, Docker Desktop, Linux)
+ENV WATCHPACK_POLLING=true
+
+# Mở cổng dev server
+EXPOSE 3000
+
+# Khởi chạy Next.js dev server
+CMD ["npm", "run", "dev"]
