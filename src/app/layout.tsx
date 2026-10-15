@@ -20,16 +20,7 @@ export const metadata: Metadata = {
   title: "Auto Research - AI Academic Workspace",
   description: "Automated Academic Researching and Report Generation System",
 };
-
-<<<<<<< HEAD
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-=======
 export default function RootLayout({ children }: { children: ReactNode }) {
->>>>>>> 7a6189751f7f0b20a360185ba77904fc4cc364e5
   return (
     <html
       lang="en"
