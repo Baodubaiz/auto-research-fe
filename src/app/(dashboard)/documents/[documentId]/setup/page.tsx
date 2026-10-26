@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 // Services & Hooks
 import { useDocuments, useDocumentDetail } from '@/features/document-setup/hooks/useDocuments';
 import { useProposals } from '@/features/document-setup/hooks/useProposals';
+import { proposalService } from '@/features/document-setup/services/proposal.service';
 import { useKeywords } from '@/features/document-setup/hooks/useKeywords';
 import { useOutline } from '@/features/document-setup/hooks/useOutline';
 import { useUploadedDocuments } from '@/features/document-setup/hooks/useUploadedDocuments';
@@ -109,49 +110,62 @@ export default function DocumentSetupPage() {
   const handleGenerateDomains = async (payload: TopicSetupPayload) => {
     try {
       const activeDocId = await ensureDocumentCreated(payload);
-      const res = await createJob({
-        module: 'document_setup',
-        action: 'generate_domains',
-        document_id: activeDocId,
-        payload: { field: payload.field, language: payload.language },
+      toast.loading('Generating domains with AI...', { id: 'gen-domains' });
+      await proposalService.generateDomains({
+        documentId: activeDocId,
+        field: payload.field,
+        language: payload.language,
+        domainsNum: payload.numberOfDomains || 3,
       });
-      toast.success('Generated domains successfully!');
-      // Refetch queries to sync updated DB record
+      toast.success('Generated domains successfully!', { id: 'gen-domains' });
       window.location.reload();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to generate domains');
+      toast.error(err?.response?.data?.message || 'Failed to generate domains', { id: 'gen-domains' });
     }
   };
 
   const handleGenerateSubdomains = async () => {
     try {
       const activeDocId = await ensureDocumentCreated();
-      await createJob({
-        module: 'document_setup',
-        action: 'generate_subdomains',
-        document_id: activeDocId,
-        payload: { field: document?.field || 'Finance' },
+      const targetDomain = domains[0]?.domainName || document?.field || 'Finance';
+      toast.loading('Generating subdomains with AI...', { id: 'gen-subdomains' });
+      await proposalService.generateSubdomains({
+        documentId: activeDocId,
+        field: document?.field || 'Finance',
+        domain: targetDomain,
+        subdomainsNum: document?.numberOfSubdomains || 3,
       });
-      toast.success('Generated subdomains!');
+      toast.success('Generated subdomains successfully!', { id: 'gen-subdomains' });
       window.location.reload();
     } catch (err: any) {
-      toast.error('Failed to generate subdomains');
+      toast.error(err?.response?.data?.message || 'Failed to generate subdomains', { id: 'gen-subdomains' });
     }
   };
 
   const handleGenerateTitles = async () => {
     try {
       const activeDocId = await ensureDocumentCreated();
-      await createJob({
-        module: 'document_setup',
-        action: 'generate_titles',
-        document_id: activeDocId,
-        payload: { field: document?.field || 'Finance' },
+      const targetDomain = domains[0]?.domainName || document?.field || 'Finance';
+      const targetSubdomains =
+        domains[0]?.subdomains && domains[0].subdomains.length > 0
+          ? domains[0].subdomains
+          : Array.isArray(document?.subdomains) && (document.subdomains as any[]).length > 0
+            ? (document.subdomains as any[])
+            : [targetDomain];
+
+      toast.loading('Generating titles and proposals with AI...', { id: 'gen-titles' });
+      await proposalService.generateTitles({
+        documentId: activeDocId,
+        field: document?.field || 'Finance & Banking',
+        domain: targetDomain,
+        subdomains: targetSubdomains,
+        language: 'tiếng việt',
       });
-      toast.success('Generated titles and proposals!');
+      toast.success('Generated titles and proposals!', { id: 'gen-titles' });
       await refetchProposals();
+      window.location.reload();
     } catch (err: any) {
-      toast.error('Failed to generate titles');
+      toast.error(err?.response?.data?.message || 'Failed to generate titles', { id: 'gen-titles' });
     }
   };
 
@@ -499,6 +513,7 @@ export default function DocumentSetupPage() {
           onUpdateOutline={setOutline}
           onSaveOutline={handleSaveOutline}
           onContinueToWrite={() => router.push(`/documents/${documentId}/write`)}
+          onGenerateOutline={handleGenerateOutline}
         />
       )}
 
